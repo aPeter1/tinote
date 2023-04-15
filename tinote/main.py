@@ -153,7 +153,7 @@ def main():
         mark_note(args.id, not args.uncheck)
     elif args.subcommand == "delete":
         delete_note(args.id)
-    elif args.command == 'clear':
+    elif args.subcommand == 'clear':
         clear_notes(args.category)
     else:
         parser.print_help()
