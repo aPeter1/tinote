@@ -104,6 +104,20 @@ def delete_note(note_id):
         print("Invalid note ID.")
 
 
+def clear_notes(category=None):
+    notes, max_id = load_notes()
+    if category:
+        notes = [note for note in notes if note['category'] != category]
+    else:
+        notes = []
+
+    save_notes(notes, max_id)
+    if category:
+        print(f"Successfully cleared all notes in category '{category}'.")
+    else:
+        print("Successfully cleared all notes.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="A command-line tool for taking quick notes.", prog="ti")
     subparsers = parser.add_subparsers(dest="subcommand")
@@ -126,6 +140,9 @@ def main():
     delete_parser = subparsers.add_parser("delete", help="Delete a note.")
     delete_parser.add_argument("id", type=int, help="The ID of the note to delete.")
 
+    clear_parser = subparsers.add_parser('clear', help='Clear all notes or notes in the specified category')
+    clear_parser.add_argument('-c', '--category', type=str, help='Category of notes to clear (optional)')
+
     args = parser.parse_args()
 
     if args.subcommand == "add":
@@ -136,6 +153,8 @@ def main():
         mark_note(args.id, not args.uncheck)
     elif args.subcommand == "delete":
         delete_note(args.id)
+    elif args.command == 'clear':
+        clear_notes(args.category)
     else:
         parser.print_help()
 

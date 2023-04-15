@@ -42,12 +42,20 @@ Delete a note:
 ti delete <note_id>
 ```
 
+Clear all notes or notes within a specified category:
+
+```bash
+ti clear
+ti clear -c <category>
+```
+
 ## Features
 
 - Create and manage notes with optional categories and importance levels
 - List notes, with optional filters for categories and importance
 - Easily mark notes as checked/unchecked
 - Delete notes using their ID
+- Clear all notes or notes within a specified category
 - Automatically saves notes to a local JSON file for persistence
 
 ## License
