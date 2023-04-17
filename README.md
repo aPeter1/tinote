@@ -12,7 +12,7 @@ pip install tinote
 
 ## Usage
 
-Create a new note:
+Create a new note (if no category is provided, the last category will be used):
 
 ```bash
 ti add "a note to remember" -c <optional category> -i <optional importance>
