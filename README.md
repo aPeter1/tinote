@@ -15,13 +15,13 @@ pip install tinote
 Create a new note:
 
 ```bash
-ti "a note to remember" -c <optional category> -i <optional importance>
+ti add "a note to remember" -c <optional category> -i <optional importance>
 ```
 
-List all notes:
+List all notes (verbose list will include importance and timestamp):
 
 ```bash
-ti list
+ti list [-v]
 ```
 
 List notes with filters (category or importance):

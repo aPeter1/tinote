@@ -50,7 +50,7 @@ def format_note(note_text):
     return "\n".join(formatted_lines)
 
 
-def list_notes(category=None, importance=None):
+def list_notes(category=None, importance=None, verbose=None):
     notes, _ = load_notes()
     if not notes:
         print("No notes found.")
@@ -65,7 +65,7 @@ def list_notes(category=None, importance=None):
         for note in filtered_notes:
             checkbox = "[x]" if note["checked"] else "[ ]"
             formatted_note = format_note(note["note"])
-            print(f"{note['id']}. {checkbox} {formatted_note} (Category: {note['category']}, Importance: {note['importance']}, Timestamp: {note['timestamp']})")
+            print(f"{note['id']}. {checkbox} {formatted_note}" + (f" (Category: {note['category']}, Importance: {note['importance']}, Timestamp: {note['timestamp']})" if verbose else ""))
     else:
         grouped_notes = {category: [note for note in notes if note["category"] == category] for category in set(note["category"] for note in notes)}
 
@@ -74,7 +74,7 @@ def list_notes(category=None, importance=None):
             for note in category_notes:
                 checkbox = "[x]" if note["checked"] else "[ ]"
                 formatted_note = format_note(note["note"])
-                print(f"  {note['id']}. {checkbox} {formatted_note} (Importance: {note['importance']}, Timestamp: {note['timestamp']})")
+                print(f"  {note['id']}. {checkbox} {formatted_note}" + (f" (Importance: {note['importance']}, Timestamp: {note['timestamp']})" if verbose else ""))
             print()
 
 
@@ -132,6 +132,7 @@ def main():
     list_parser = subparsers.add_parser("list", help="List all notes.")
     list_parser.add_argument("-c", "--category", type=str, default=None, help="List notes from a specific category.")
     list_parser.add_argument("-i", "--importance", type=int, default=None, help="List notes with a specific importance level.")
+    list_parser.add_argument("-v", "--verbose", action="store_true", help="Show importance and timestamp with each note.")
 
     mark_parser = subparsers.add_parser("mark", help="Mark a note as checked or unchecked.")
     mark_parser.add_argument("id", type=int, help="The ID of the note to mark.")
@@ -148,7 +149,7 @@ def main():
     if args.subcommand == "add":
         create_note(args.note, args.category, args.importance)
     elif args.subcommand == "list":
-        list_notes(args.category, args.importance)
+        list_notes(args.category, args.importance, args.verbose)
     elif args.subcommand == "mark":
         mark_note(args.id, not args.uncheck)
     elif args.subcommand == "delete":
