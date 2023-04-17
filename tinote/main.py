@@ -37,6 +37,7 @@ def create_note(note, category, importance):
         "category": category,
         "importance": importance,
         "timestamp": datetime.now().isoformat(),
+        "subs": [],
         "checked": False,
     }
 
@@ -46,9 +47,43 @@ def create_note(note, category, importance):
     print("Note added successfully.")
 
 
-def format_note(note_text):
+def create_sub_note(note, parent_id, importance):
+    notes, max_id, last_category = load_notes()
+
+    for n in notes:
+        if n["id"] == parent_id:
+            parent_note = n
+            break
+    else:
+        print("Parent does not exist.")
+        return
+
+    new_id = max_id + 1
+
+    new_note = {
+        "id": new_id,  # Use the new ID
+        "parent": parent_id,
+        "note": note,
+        "category": parent_note["category"],
+        "importance": importance,
+        "timestamp": datetime.now().isoformat(),
+        "checked": False,
+    }
+
+    try:
+        parent_note["subs"].append(new_note)
+    except KeyError:
+        parent_note["subs"] = [new_note]
+
+    save_notes(notes, new_id, last_category)
+
+    print("Sub-note added successfully.")
+
+
+def format_note(note_text, sub=False):
+    bullet_indent = "\t\t" if sub else "\t"
     lines = note_text.split("*")
-    formatted_lines = [lines[0]] + [f"\t* {line.strip()}" for line in lines[1:]]
+    formatted_lines = [lines[0]] + [f"{bullet_indent}* {line.strip()}" for line in lines[1:]]
     return "\n".join(formatted_lines)
 
 
@@ -68,6 +103,11 @@ def list_notes(category=None, importance=None, verbose=None):
             checkbox = "[x]" if note["checked"] else "[ ]"
             formatted_note = format_note(note["note"])
             print(f"{note['id']}. {checkbox} {formatted_note}" + (f" (Category: {note['category']}, Importance: {note['importance']}, Timestamp: {note['timestamp']})" if verbose else ""))
+
+            for sub in note["subs"]:
+                checkbox = "[x]" if sub["checked"] else "[ ]"
+                formatted_note = format_note(sub["note"], True)
+                print(f"\t{sub['id']}. {checkbox} {formatted_note}" + (f" (Category: {sub['category']}, Importance: {sub['importance']}, Timestamp: {sub['timestamp']})" if verbose else ""))
     else:
         grouped_notes = {category: [note for note in notes if note["category"] == category] for category in set(note["category"] for note in notes)}
 
@@ -77,6 +117,11 @@ def list_notes(category=None, importance=None, verbose=None):
                 checkbox = "[x]" if note["checked"] else "[ ]"
                 formatted_note = format_note(note["note"])
                 print(f"  {note['id']}. {checkbox} {formatted_note}" + (f" (Importance: {note['importance']}, Timestamp: {note['timestamp']})" if verbose else ""))
+
+                for sub in note["subs"]:
+                    checkbox = "[x]" if sub["checked"] else "[ ]"
+                    formatted_note = format_note(sub["note"], True)
+                    print(f"\t{sub['id']}. {checkbox} {formatted_note}" + (f" (Importance: {sub['importance']}, Timestamp: {sub['timestamp']})" if verbose else ""))
             print()
 
 
@@ -88,7 +133,14 @@ def mark_note(note_id, checked=True):
             note["checked"] = checked
             save_notes(notes, max_id, last_category)
             print(f"Note {'marked' if checked else 'unmarked'} successfully.")
-            break
+            return
+
+        for index, sub in enumerate(note["subs"]):
+            if sub["id"] == note_id:
+                sub["checked"] = checked
+                save_notes(notes, max_id, last_category)
+                print(f"Note {'marked' if checked else 'unmarked'} successfully.")
+                return
     else:
         print("Invalid note ID.")
 
@@ -101,7 +153,14 @@ def delete_note(note_id):
             del notes[index]
             save_notes(notes, max_id, last_category)
             print("Note deleted successfully.")
-            break
+            return
+
+        for sub_index, sub in enumerate(note["subs"]):
+            if sub["id"] == note_id:
+                del note["subs"][sub_index]
+                save_notes(notes, max_id, last_category)
+                print("Note deleted successfully.")
+                return
     else:
         print("Invalid note ID.")
 
@@ -129,6 +188,11 @@ def main():
     add_parser.add_argument("note", type=str, help="The content of the note.")
     add_parser.add_argument("-c", "--category", type=str, default=None, help="Optional category for the note. If none is provided, the last category will be used.")
     add_parser.add_argument("-i", "--importance", type=int, default=None, help="Optional importance level for the note (integer).")
+
+    sub_parser = subparsers.add_parser('sub', help='Add a sub-note to a note')
+    sub_parser.add_argument('parent_id', type=int, help='Parent note ID')
+    sub_parser.add_argument('note', type=str, help='Sub-note text')
+    sub_parser.add_argument("-i", "--importance", type=int, default=None, help="Optional importance level for the note (integer).")
 
     # Add subparser for 'list' command
     list_parser = subparsers.add_parser("list", help="List all notes.")
@@ -158,6 +222,8 @@ def main():
         delete_note(args.id)
     elif args.subcommand == 'clear':
         clear_notes(args.category)
+    elif args.subcommand == 'sub':
+        create_sub_note(args.note, args.parent_id, args.importance)
     else:
         parser.print_help()
 

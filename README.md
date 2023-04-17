@@ -30,6 +30,12 @@ List notes with filters (category or importance):
 ti list -c <category> -i <importance>
 ```
 
+Add a sub-note to a note (currently only supports one level)
+
+```bash
+ti sub <parent_id> "Text of your sub-note" -i <importance>
+```
+
 Mark a note as checked/unchecked:
 
 ```bash
