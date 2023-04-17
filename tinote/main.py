@@ -186,8 +186,15 @@ def main():
     # Add subparser for 'add' command
     add_parser = subparsers.add_parser("add", help="Add a new note.")
     add_parser.add_argument("note", type=str, help="The content of the note.")
-    add_parser.add_argument("-c", "--category", type=str, default=None, help="Optional category for the note. If none is provided, the last category will be used.")
-    add_parser.add_argument("-i", "--importance", type=int, default=None, help="Optional importance level for the note (integer).")
+    add_parser.add_argument("category", type=str, nargs="?", default=None,
+                            help="Optional category for the note. If none is provided, the last category will be used.")
+    add_parser.add_argument("importance", type=int, nargs="?", default=None,
+                            help="Optional importance level for the note (integer).")
+    add_parser.add_argument("-c", "--category", type=str, default=None,
+                            help="Optional category for the note. If none is provided, the last category will be used.",
+                            dest="category_keyword")
+    add_parser.add_argument("-i", "--importance", type=int, default=None,
+                            help="Optional importance level for the note (integer).", dest="importance_keyword")
 
     sub_parser = subparsers.add_parser('sub', help='Add a sub-note to a note')
     sub_parser.add_argument('parent_id', type=int, help='Parent note ID')
@@ -213,7 +220,9 @@ def main():
     args = parser.parse_args()
 
     if args.subcommand == "add":
-        create_note(args.note, args.category, args.importance)
+        category = args.category_keyword if args.category_keyword is not None else args.category
+        importance = args.importance_keyword if args.importance_keyword is not None else args.importance
+        create_note(args.note, category, importance)
     elif args.subcommand == "list":
         list_notes(args.category, args.importance, args.verbose)
     elif args.subcommand == "mark":
