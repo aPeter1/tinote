@@ -92,7 +92,7 @@ def format_note(note_text, sub=False):
     return "\n".join(formatted_lines)
 
 
-def list_notes(category=None, importance=None, verbose=None, marked=None):
+def list_notes(category=None, importance=None, verbose=None, marked=None, unmarked=None):
     notes, _, _ = load_notes()
 
     if not category:
@@ -105,7 +105,10 @@ def list_notes(category=None, importance=None, verbose=None, marked=None):
             if importance and note["importance"] != importance:
                 continue
 
-            if marked is not None and note["checked"] != marked:
+            if marked is not None and not note["checked"]:
+                continue
+
+            if unmarked is not None and note["checked"]:
                 continue
 
             checked_symbol = "[✔]" if note["checked"] else "[ ]"
@@ -225,7 +228,10 @@ def main():
                              help="List notes with a specific importance level.")
     list_parser.add_argument("-v", "--verbose", action="store_true",
                              help="Show importance and timestamp with each note.")
-    list_parser.add_argument("-m", "--marked", type=bool, default=None, help="Filter on marked (no filter by default, true or false for marked/unmarked)")
+    list_parser.add_argument("-m", "--marked", action="store_true", default=None,
+                             help="Only show marked items")
+    list_parser.add_argument("-u", "--unmarked", action="store_true", default=None,
+                             help="Only show unmarked items")
 
     mark_parser = subparsers.add_parser("mark", help="Mark a note as checked or unchecked.")
     mark_parser.add_argument("id", type=int, help="The ID of the note to mark.")
@@ -244,7 +250,7 @@ def main():
         importance = args.importance_keyword if args.importance_keyword is not None else args.importance
         create_note(args.note, category, importance)
     elif args.subcommand == "list":
-        list_notes(args.category, args.importance, args.verbose, args.marked)
+        list_notes(args.category, args.importance, args.verbose, args.marked, args.unmarked)
     elif args.subcommand == "mark":
         mark_note(args.id, not args.uncheck)
     elif args.subcommand == "delete":
