@@ -1,8 +1,15 @@
 from setuptools import setup, find_packages
 from setuptools.command.install import install
+import configparser
 
 
-VERSION = "1.1.1"
+def get_version():
+    config = configparser.ConfigParser()
+    config.read('.bumpversion.cfg')
+    return config['bumpversion']['current_version']
+
+
+VERSION = get_version()
 
 
 class CustomInstall(install):
