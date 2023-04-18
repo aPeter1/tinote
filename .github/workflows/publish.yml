@@ -22,6 +22,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install setuptools wheel twine bumpversion
 
+    - name: Configure Git
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+
     - name: Bump version
       run: |
         NEW_VERSION=$(git tag --points-at HEAD)
