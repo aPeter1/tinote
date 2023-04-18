@@ -51,10 +51,10 @@ VAN-STUFF-----------------------------------------------------------------------
     [ ] 62 Run wiring
 ```
 
-List notes with filters (category or importance) or higher verbosity:
+List notes with filters (category or importance or marked) or higher verbosity:
 
 ```bash
-ti list -c <category> -i <importance> -v
+ti list -c <category> -i <importance> -m <is marked> -v
 ```
 
 Add a sub-note to a note (currently only supports one level)
