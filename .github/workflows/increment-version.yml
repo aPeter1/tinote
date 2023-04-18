@@ -34,6 +34,8 @@ jobs:
 
       - name: Bump version and create a new tag
         if: env.VERSION_NOT_BUMPED == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
         run: |
           git config user.name "GitHub Actions"
           git config user.email actions@github.com
