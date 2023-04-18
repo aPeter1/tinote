@@ -1,4 +1,4 @@
-![Logo](assets/color-logo-no-background.png)
+![Logo](https://raw.githubusercontent.com/aPeter1/tinote/main/assets/color-logo-no-background.png)
 
 Tinote is a lightweight command-line note-taking tool, designed for quick and easy note management. Keep track of your thoughts, ideas, or reminders directly from the terminal.
 
