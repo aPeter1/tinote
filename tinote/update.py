@@ -36,7 +36,7 @@ def update(final_version):
 
 
 def update_1_0_x_to_1_1_x(data):
-    notes, _, _ = data.get("notes", []), data.get("max_id", 0), data.get("last_category", "unknown")
+    notes = data.get("notes", [])
 
     for note in notes:
         try:
