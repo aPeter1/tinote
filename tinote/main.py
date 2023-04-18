@@ -2,6 +2,8 @@ import json
 import argparse
 import os
 from datetime import datetime
+import textwrap
+
 
 NOTES_FILE = os.path.expanduser("~/.ti_notes.json")
 
@@ -21,7 +23,8 @@ def load_notes():
             return [], 0, "unknown"  # Return max_id as 0 for an empty file
 
         data = json.loads(content)
-        notes, max_id, last_category = data.get("notes", []), data.get("max_id", 0), data.get("last_category", "unknown")
+        notes, max_id, last_category = data.get("notes", []), data.get("max_id", 0), data.get("last_category",
+                                                                                              "unknown")
         return notes, max_id, last_category
 
 
@@ -36,7 +39,8 @@ def create_note(note, category, importance):
         "note": note,
         "category": category,
         "importance": importance,
-        "timestamp": datetime.now().isoformat(),
+        "created_timestamp": datetime.now().isoformat(),
+        "marked_timestamp": None,
         "subs": [],
         "checked": False,
     }
@@ -66,7 +70,8 @@ def create_sub_note(note, parent_id, importance):
         "note": note,
         "category": parent_note["category"],
         "importance": importance,
-        "timestamp": datetime.now().isoformat(),
+        "created_timestamp": datetime.now().isoformat(),
+        "marked_timestamp": None,
         "checked": False,
     }
 
@@ -89,40 +94,46 @@ def format_note(note_text, sub=False):
 
 def list_notes(category=None, importance=None, verbose=None):
     notes, _, _ = load_notes()
-    if not notes:
-        print("No notes found.")
-        return
 
-    if category or importance is not None:
-        filtered_notes = [note for note in notes if (not category or note["category"] == category) and (importance is None or note["importance"] == importance)]
-        if not filtered_notes:
-            print("No notes found matching the given filters.")
-            return
-
-        for note in filtered_notes:
-            checkbox = "[x]" if note["checked"] else "[ ]"
-            formatted_note = format_note(note["note"])
-            print(f"{note['id']}. {checkbox} {formatted_note}" + (f" (Category: {note['category']}, Importance: {note['importance']}, Timestamp: {note['timestamp']})" if verbose else ""))
-
-            for sub in note["subs"]:
-                checkbox = "[x]" if sub["checked"] else "[ ]"
-                formatted_note = format_note(sub["note"], True)
-                print(f"\t{sub['id']}. {checkbox} {formatted_note}" + (f" (Category: {sub['category']}, Importance: {sub['importance']}, Timestamp: {sub['timestamp']})" if verbose else ""))
+    if not category:
+        sorted_notes = sorted(notes, key=lambda x: x['category'])
     else:
-        grouped_notes = {category: [note for note in notes if note["category"] == category] for category in set(note["category"] for note in notes)}
+        sorted_notes = [note for note in notes if note['category'] == category]
 
-        for category, category_notes in grouped_notes.items():
-            print(f"Category: {category or 'Uncategorized'}")
-            for note in category_notes:
-                checkbox = "[x]" if note["checked"] else "[ ]"
-                formatted_note = format_note(note["note"])
-                print(f"  {note['id']}. {checkbox} {formatted_note}" + (f" (Importance: {note['importance']}, Timestamp: {note['timestamp']})" if verbose else ""))
+    def display_notes(notes_list, indent=0):
+        for note in notes_list:
+            if importance and note["importance"] != importance:
+                continue
 
-                for sub in note["subs"]:
-                    checkbox = "[x]" if sub["checked"] else "[ ]"
-                    formatted_note = format_note(sub["note"], True)
-                    print(f"\t{sub['id']}. {checkbox} {formatted_note}" + (f" (Importance: {sub['importance']}, Timestamp: {sub['timestamp']})" if verbose else ""))
-            print()
+            checked_symbol = "✔" if note["checked"] else "✘"
+            importance_symbol = f"[{note['importance']}]" if note["importance"] is not None and verbose else ""
+            created_timestamp = f'(Created {note["created_timestamp"]})' if verbose else ""
+            marked_timestamp = f'(Mark Updated {note["marked_timestamp"]})' if verbose and note["marked_timestamp"] is not None else ""
+
+            lines = textwrap.wrap(note['note'], width=80 - indent)
+            first_line = lines.pop(0)
+
+            print(
+                f"{indent * ' '}{checked_symbol} {note['id']} {first_line} "
+                f"{importance_symbol} {created_timestamp} {marked_timestamp}"
+            )
+
+            for line in lines:
+                print(f"{indent * ' '}   {line}")
+
+            try:
+                if note["subs"]:
+                    display_notes(note["subs"], indent + 4)
+            except KeyError:
+                pass
+
+    grouped_notes = {}
+    for note in sorted_notes:
+        grouped_notes.setdefault(note['category'], []).append(note)
+
+    for category, cat_notes in grouped_notes.items():
+        print(f"\n{category.upper()}{'-' * (80 - len(category))}")
+        display_notes(cat_notes)
 
 
 def mark_note(note_id, checked=True):
@@ -131,6 +142,7 @@ def mark_note(note_id, checked=True):
     for note in notes:
         if note["id"] == note_id:
             note["checked"] = checked
+            note["marked_timestamp"] = datetime.now().isoformat()
             save_notes(notes, max_id, last_category)
             print(f"Note {'marked' if checked else 'unmarked'} successfully.")
             return
@@ -138,6 +150,7 @@ def mark_note(note_id, checked=True):
         for index, sub in enumerate(note["subs"]):
             if sub["id"] == note_id:
                 sub["checked"] = checked
+                note["marked_timestamp"] = datetime.now().isoformat()
                 save_notes(notes, max_id, last_category)
                 print(f"Note {'marked' if checked else 'unmarked'} successfully.")
                 return
@@ -199,13 +212,16 @@ def main():
     sub_parser = subparsers.add_parser('sub', help='Add a sub-note to a note')
     sub_parser.add_argument('parent_id', type=int, help='Parent note ID')
     sub_parser.add_argument('note', type=str, help='Sub-note text')
-    sub_parser.add_argument("-i", "--importance", type=int, default=None, help="Optional importance level for the note (integer).")
+    sub_parser.add_argument("-i", "--importance", type=int, default=None,
+                            help="Optional importance level for the note (integer).")
 
     # Add subparser for 'list' command
     list_parser = subparsers.add_parser("list", help="List all notes.")
     list_parser.add_argument("-c", "--category", type=str, default=None, help="List notes from a specific category.")
-    list_parser.add_argument("-i", "--importance", type=int, default=None, help="List notes with a specific importance level.")
-    list_parser.add_argument("-v", "--verbose", action="store_true", help="Show importance and timestamp with each note.")
+    list_parser.add_argument("-i", "--importance", type=int, default=None,
+                             help="List notes with a specific importance level.")
+    list_parser.add_argument("-v", "--verbose", action="store_true",
+                             help="Show importance and timestamp with each note.")
 
     mark_parser = subparsers.add_parser("mark", help="Mark a note as checked or unchecked.")
     mark_parser.add_argument("id", type=int, help="The ID of the note to mark.")
