@@ -105,7 +105,7 @@ def list_notes(category=None, importance=None, verbose=None):
             if importance and note["importance"] != importance:
                 continue
 
-            checked_symbol = "✔" if note["checked"] else "✘"
+            checked_symbol = "[✔]" if note["checked"] else "[ ]"
             importance_symbol = f"[{note['importance']}]" if note["importance"] is not None and verbose else ""
             created_timestamp = f'(Created {note["created_timestamp"]})' if verbose else ""
             marked_timestamp = f'(Mark Updated {note["marked_timestamp"]})' if verbose and note["marked_timestamp"] is not None else ""
