@@ -1,4 +1,4 @@
-name: Auto tag on PR merge
+name: Auto bump version
 
 on:
   pull_request:
@@ -6,38 +6,44 @@ on:
       - closed
 
 jobs:
-  auto_tag:
+  auto_bump_version:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+    - name: Checkout repo
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
 
-      - name: Install bump2version
-        run: pip install bump2version
+    - name: Check if version is bumped
+      run: |
+        git fetch origin main
+        CURRENT_VERSION=$(grep current_version .bumpversion.cfg | awk -F ' ' '{print $3}')
+        LATEST_TAG=$(git describe --tags --abbrev=0)
+        if [ "$CURRENT_VERSION" == "$LATEST_TAG" ]; then
+          echo "VERSION_NOT_BUMPED=true" >> $GITHUB_ENV
+        else
+          echo "VERSION_NOT_BUMPED=false" >> $GITHUB_ENV
+        fi
 
-      - name: Check if version is bumped
-        run: |
-          git fetch --tags
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          CURRENT_VERSION=$(grep current_version .bumpversion.cfg | awk -F ' ' '{print $3}')
-          if [ "$LATEST_TAG" == "$CURRENT_VERSION" ]; then
-            echo "VERSION_NOT_BUMPED=true" >> $GITHUB_ENV
-          else
-            echo "VERSION_NOT_BUMPED=false" >> $GITHUB_ENV
-          fi
+    - name: Bump version and create a new tag
+      if: env.VERSION_NOT_BUMPED == 'true'
+      run: |
+        bumpversion patch
+        NEW_TAG=$(grep current_version .bumpversion.cfg | awk -F ' ' '{print $3}')
+        git tag $NEW_TAG
 
-      - name: Bump version and create a new tag
-        if: env.VERSION_NOT_BUMPED == 'true'
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email actions@github.com
-          bump2version --no-tag --commit patch
-          NEW_VERSION=$(cat .bumpversion.cfg | grep current_version | sed -r 's/^current_version\s*=\s*//')
-          git tag $NEW_VERSION
-          git push origin $NEW_VERSION
+    - name: Set up Git user
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Push changes
+      run: |
+        git push origin HEAD:main --tags
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTIONS_BOT_TOKEN }}
