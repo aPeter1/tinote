@@ -1,0 +1,3 @@
+./dist/*
+./.idea/*
+./tinote.egg-info/*

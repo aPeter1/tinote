@@ -1,0 +1,47 @@
+name: Tag after PR Merge
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+
+    - name: Install bump2version
+      run: pip install bump2version
+
+    - name: Check if version was bumped manually
+      id: check_version_bump
+      run: |
+        git fetch --tags
+        LATEST_TAG=$(git describe --abbrev=0 --tags)
+        CURRENT_VERSION=$(cat .bumpversion.cfg | grep -oP 'current_version = \K.*')
+        if [ "$LATEST_TAG" != "v$CURRENT_VERSION" ]; then
+          echo "::set-output name=version_bumped::true"
+        else
+          echo "::set-output name=version_bumped::false"
+        fi
+
+    - name: Bump patch version and tag
+      if: steps.check_version_bump.outputs.version_bumped == 'false'
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+        bump2version --no-tag patch
+        NEW_VERSION=$(cat .bumpversion.cfg | grep -oP 'current_version = \K.*')
+        git tag "$NEW_VERSION"
+        git push origin "$NEW_VERSION"
