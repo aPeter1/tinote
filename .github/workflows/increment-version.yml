@@ -1,13 +1,12 @@
 name: Auto bump version
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
+    branches:
+      - main
 
 jobs:
   auto_bump_version:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -43,4 +42,5 @@ jobs:
           bump2version --no-tag --commit patch
           NEW_VERSION=$(cat .bumpversion.cfg | grep current_version | sed -r 's/^current_version\s*=\s*//')
           git tag $NEW_VERSION
+          git remote set-url origin "https://${{ secrets.ACTIONS_BOT_TOKEN }}@github.com/${{ github.repository }}"
           git push origin $NEW_VERSION
