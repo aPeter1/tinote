@@ -1,6 +1,20 @@
 ![Logo](https://raw.githubusercontent.com/aPeter1/tinote/main/assets/color-logo-no-background.png)
 
+## No Thought Left Behind.
+
+#### Huh, that's a pretty good idea. I should write that down. 
+
+###### [proceeds to lose the paper]
+
+#### Wow, I should write down that task for later in Notepad!
+
+###### [proceeds not to save the file before computer restarts that night]
+
+#### Ugh.
+
 Tinote is light-weight command-line note-taking tool, designed for quick and easy note management. Keep track of your thoughts, ideas, or reminders directly from the terminal.
+
+###### (made entirely for myself, but feel free to use it and contribute!)
 
 ## Installation
 
@@ -21,13 +35,26 @@ ti add "a note to remember" <optional category> <optional importance>
 List all notes (verbose list will include importance and timestamp):
 
 ```bash
-ti list [-v]
+ti list
 ```
 
-List notes with filters (category or importance):
+```output
+IDEAS---------------------------------------------------------------------------
+[ ] 55 A dating app, but for hamster-owners ONLY
+[✔] 58 A sushi company that sell BEEF sushi! :O
+
+VAN-STUFF-----------------------------------------------------------------------
+[✔] 55 Fix the latch for the fridge
+[ ] 58 Install Solar
+    [ ] 60 Install roof-rack, hopefully easy
+    [ ] 61 Attach panels
+    [ ] 62 Run wiring
+```
+
+List notes with filters (category or importance) or higher verbosity:
 
 ```bash
-ti list -c <category> -i <importance>
+ti list -c <category> -i <importance> -v
 ```
 
 Add a sub-note to a note (currently only supports one level)
