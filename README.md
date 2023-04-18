@@ -54,7 +54,7 @@ VAN-STUFF-----------------------------------------------------------------------
 List notes with filters (category or importance or marked) or higher verbosity:
 
 ```bash
-ti list -c <category> -i <importance> -m <is marked> -v
+ti list -c <category> -i <importance> -m -u -v
 ```
 
 Add a sub-note to a note (currently only supports one level)
