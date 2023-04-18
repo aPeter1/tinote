@@ -41,6 +41,7 @@ jobs:
           tag: ${{ env.NEW_TAG }}
           tag_exists_error: true
           message: "Latest release"
+          github_token: ${{ secrets.ACTIONS_BOT_TOKEN }}
 
 #      - uses: actions/checkout@master
 #
