@@ -21,11 +21,12 @@ jobs:
       - name: Install bump2version
         run: pip install bump2version
 
-      - name: Check if version was bumped manually
+      - name: Check if version is bumped
         run: |
-          git fetch origin main
-          VERSION_CHANGED=$(git diff origin/main...HEAD -- .bumpversion.cfg | grep -c -E "^\+current_version")
-          if [ $VERSION_CHANGED -eq 0 ]; then
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          CURRENT_VERSION=$(grep current_version .bumpversion.cfg | awk -F ' ' '{print $3}')
+          if [ "$LATEST_TAG" == "$CURRENT_VERSION" ]; then
             echo "VERSION_NOT_BUMPED=true" >> $GITHUB_ENV
           else
             echo "VERSION_NOT_BUMPED=false" >> $GITHUB_ENV
