@@ -25,7 +25,8 @@ jobs:
     - name: Bump version
       run: |
         NEW_VERSION=$(git tag --points-at HEAD)
-        bumpversion --new-version $NEW_VERSION
+        echo "New version: $NEW_VERSION"
+        bumpversion --no-tag --new-version "$NEW_VERSION" setup.py
 
     - name: Build package
       run: |
