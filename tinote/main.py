@@ -85,8 +85,8 @@ def create_sub_note(note, parent_id, importance):
     print("Sub-note added successfully.")
 
 
-def format_note(note_text, sub=False):
-    bullet_indent = "\t\t" if sub else "\t"
+def format_note(note_text, indent):
+    bullet_indent = (indent * "\t") + "\t"
     lines = note_text.split("*")
     formatted_lines = [lines[0]] + [f"{bullet_indent}* {line.strip()}" for line in lines[1:]]
     return "\n".join(formatted_lines)
@@ -117,7 +117,7 @@ def list_notes(category=None, importance=None, verbose=None, marked=None, unmark
             marked_timestamp = f'(Mark Updated {note["marked_timestamp"]})' if verbose and note["marked_timestamp"] is not None else ""
 
             lines = textwrap.wrap(note['note'], width=80 - indent)
-            first_line = lines.pop(0)
+            first_line = format_note(lines.pop(0), indent)
 
             print(
                 f"{indent * ' '}{checked_symbol} {note['id']} {first_line} "
