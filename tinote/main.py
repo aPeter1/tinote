@@ -52,37 +52,42 @@ def create_note(note, category, importance):
 
 
 def create_sub_note(note, parent_id, importance):
-    notes, max_id, last_category = load_notes()
-
-    for n in notes:
-        if n["id"] == parent_id:
-            parent_note = n
-            break
-    else:
-        print("Parent does not exist.")
-        return
-
+    all_notes, max_id, last_category = load_notes()
     new_id = max_id + 1
 
-    new_note = {
-        "id": new_id,  # Use the new ID
-        "parent": parent_id,
-        "note": note,
-        "category": parent_note["category"],
-        "importance": importance,
-        "created_timestamp": datetime.now().isoformat(),
-        "marked_timestamp": None,
-        "checked": False,
-    }
+    def find_and_add_sub_note(notes):
+        for n in notes:
+            if n["id"] == parent_id:
+                parent_note = n
+                break
+            elif find_and_add_sub_note(n["subs"]):
+                return True
+        else:
+            return False
 
-    try:
-        parent_note["subs"].append(new_note)
-    except KeyError:
-        parent_note["subs"] = [new_note]
+        new_note = {
+            "id": new_id,
+            "parent": parent_id,
+            "note": note,
+            "category": parent_note["category"],
+            "importance": importance,
+            "created_timestamp": datetime.now().isoformat(),
+            "marked_timestamp": None,
+            "subs": [],
+            "checked": False,
+        }
 
-    save_notes(notes, new_id, last_category)
+        try:
+            parent_note["subs"].append(new_note)
+        except KeyError:
+            parent_note["subs"] = [new_note]
+        return True
 
-    print("Sub-note added successfully.")
+    if find_and_add_sub_note(all_notes):
+        save_notes(all_notes, new_id, last_category)
+        print("Sub-note added successfully.")
+    else:
+        print("Parent id does not exist.")
 
 
 def format_note(note_text, indent):
