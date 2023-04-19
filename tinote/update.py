@@ -19,7 +19,8 @@ def update(final_version):
 
     # Define a dictionary of update actions keyed by the version they should be applied to
     update_actions = [
-        ("1.1.0", update_1_0_x_to_1_1_x)
+        ("1.1.0", update_1_0_x_to_1_1_x),
+        ("1.2.0", update_1_1_x_to_1_2_x)
     ]
 
     # Apply the update actions in order
@@ -42,10 +43,32 @@ def update_1_0_x_to_1_1_x(data):
         try:
             note["created_timestamp"] = note["timestamp"]
             note["marked_timestamp"] = None
-            note["subs"] = [] if "subs" not in note.keys() else note["subs"]
+            note["subs"] = [] if "subs" not in note.keys() or note["subs"] is None else note["subs"]
 
             del note["timestamp"]
         except KeyError:
             pass
+
+    return data
+
+
+def update_1_1_x_to_1_2_x(data):
+    all_notes = data.get("notes", [])
+
+    def update_notes(notes):
+        for note in notes:
+            try:
+                if "timestamp" in note.keys():
+                    note["created_timestamp"] = note["timestamp"]
+                    del note["timestamp"]
+
+                note["marked_timestamp"] = None
+                note["subs"] = [] if "subs" not in note.keys() or note["subs"] is None else note["subs"]
+            except KeyError:
+                pass
+
+            update_notes(note["subs"])
+
+    update_notes(all_notes)
 
     return data

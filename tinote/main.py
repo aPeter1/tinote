@@ -86,7 +86,7 @@ def create_sub_note(note, parent_id, importance):
 
 
 def format_note(note_text, indent):
-    bullet_indent = (indent * "\t") + "\t"
+    bullet_indent = (indent * " ") + "\t"
     lines = note_text.split("*")
     formatted_lines = [lines[0]] + [f"{bullet_indent}* {line.strip()}" for line in lines[1:]]
     return "\n".join(formatted_lines)
@@ -101,24 +101,31 @@ def list_notes(category=None, importance=None, verbose=None, marked=None, unmark
         sorted_notes = [note for note in notes if note['category'] == category]
 
     def display_notes(notes_list, indent=0):
+        print('here-1')
         for note in notes_list:
+            print('here0')
             if importance and note["importance"] != importance:
+                print('here1')
                 continue
 
             if marked is not None and not note["checked"]:
+                print('here2')
                 continue
 
             if unmarked is not None and note["checked"]:
+                print('here3')
                 continue
+
+            print(note)
 
             checked_symbol = "[✔]" if note["checked"] else "[ ]"
             importance_symbol = f"[{note['importance']}]" if note["importance"] is not None and verbose else ""
             created_timestamp = f'(Created {note["created_timestamp"]})' if verbose else ""
             marked_timestamp = f'(Mark Updated {note["marked_timestamp"]})' if verbose and note["marked_timestamp"] is not None else ""
-
+            print(note)
             lines = textwrap.wrap(note['note'], width=80 - indent)
+            print(note)
             first_line = format_note(lines.pop(0), indent)
-
             print(
                 f"{indent * ' '}{checked_symbol} {note['id']} {first_line} "
                 f"{importance_symbol} {created_timestamp} {marked_timestamp}"
@@ -130,8 +137,8 @@ def list_notes(category=None, importance=None, verbose=None, marked=None, unmark
             try:
                 if note["subs"]:
                     display_notes(note["subs"], indent + 4)
-            except KeyError:
-                pass
+            except KeyError as e:
+                print(e)
 
     grouped_notes = {}
     for note in sorted_notes:
