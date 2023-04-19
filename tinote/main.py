@@ -143,25 +143,26 @@ def list_notes(category=None, importance=None, verbose=None, marked=None, unmark
 
 
 def mark_note(note_id, checked=True):
-    notes, max_id, last_category = load_notes()
+    all_notes, max_id, last_category = load_notes()
 
-    for note in notes:
-        if note["id"] == note_id:
-            note["checked"] = checked
-            note["marked_timestamp"] = datetime.now().isoformat()
-            save_notes(notes, max_id, last_category)
-            print(f"Note {'marked' if checked else 'unmarked'} successfully.")
-            return
-
-        for index, sub in enumerate(note["subs"]):
-            if sub["id"] == note_id:
-                sub["checked"] = checked
+    def find_and_mark_note(notes):
+        for note in notes:
+            if note["id"] == note_id:
+                note["checked"] = checked
                 note["marked_timestamp"] = datetime.now().isoformat()
-                save_notes(notes, max_id, last_category)
                 print(f"Note {'marked' if checked else 'unmarked'} successfully.")
-                return
+                return True
+            elif find_and_mark_note(note["subs"]):
+                return True
+        else:
+            return False
+
+    note_marked = find_and_mark_note(all_notes)
+
+    if note_marked:
+        save_notes(all_notes, max_id, last_category)
     else:
-        print("Invalid note ID.")
+        print("Invalid note id.")
 
 
 def delete_note(note_id):
