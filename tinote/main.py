@@ -52,41 +52,46 @@ def create_note(note, category, importance):
 
 
 def create_sub_note(note, parent_id, importance):
-    notes, max_id, last_category = load_notes()
-
-    for n in notes:
-        if n["id"] == parent_id:
-            parent_note = n
-            break
-    else:
-        print("Parent does not exist.")
-        return
-
+    all_notes, max_id, last_category = load_notes()
     new_id = max_id + 1
 
-    new_note = {
-        "id": new_id,  # Use the new ID
-        "parent": parent_id,
-        "note": note,
-        "category": parent_note["category"],
-        "importance": importance,
-        "created_timestamp": datetime.now().isoformat(),
-        "marked_timestamp": None,
-        "checked": False,
-    }
+    def find_and_add_sub_note(notes):
+        for n in notes:
+            if n["id"] == parent_id:
+                parent_note = n
+                break
+            elif find_and_add_sub_note(n["subs"]):
+                return True
+        else:
+            return False
 
-    try:
-        parent_note["subs"].append(new_note)
-    except KeyError:
-        parent_note["subs"] = [new_note]
+        new_note = {
+            "id": new_id,
+            "parent": parent_id,
+            "note": note,
+            "category": parent_note["category"],
+            "importance": importance,
+            "created_timestamp": datetime.now().isoformat(),
+            "marked_timestamp": None,
+            "subs": [],
+            "checked": False,
+        }
 
-    save_notes(notes, new_id, last_category)
+        try:
+            parent_note["subs"].append(new_note)
+        except KeyError:
+            parent_note["subs"] = [new_note]
+        return True
 
-    print("Sub-note added successfully.")
+    if find_and_add_sub_note(all_notes):
+        save_notes(all_notes, new_id, last_category)
+        print("Sub-note added successfully.")
+    else:
+        print("Parent id does not exist.")
 
 
-def format_note(note_text, sub=False):
-    bullet_indent = "\t\t" if sub else "\t"
+def format_note(note_text, indent):
+    bullet_indent = (indent * " ") + "\t"
     lines = note_text.split("*")
     formatted_lines = [lines[0]] + [f"{bullet_indent}* {line.strip()}" for line in lines[1:]]
     return "\n".join(formatted_lines)
@@ -117,8 +122,8 @@ def list_notes(category=None, importance=None, verbose=None, marked=None, unmark
             marked_timestamp = f'(Mark Updated {note["marked_timestamp"]})' if verbose and note["marked_timestamp"] is not None else ""
 
             lines = textwrap.wrap(note['note'], width=80 - indent)
-            first_line = lines.pop(0)
 
+            first_line = format_note(lines.pop(0), indent)
             print(
                 f"{indent * ' '}{checked_symbol} {note['id']} {first_line} "
                 f"{importance_symbol} {created_timestamp} {marked_timestamp}"
@@ -130,8 +135,8 @@ def list_notes(category=None, importance=None, verbose=None, marked=None, unmark
             try:
                 if note["subs"]:
                     display_notes(note["subs"], indent + 4)
-            except KeyError:
-                pass
+            except KeyError as e:
+                print(e)
 
     grouped_notes = {}
     for note in sorted_notes:
@@ -143,25 +148,26 @@ def list_notes(category=None, importance=None, verbose=None, marked=None, unmark
 
 
 def mark_note(note_id, checked=True):
-    notes, max_id, last_category = load_notes()
+    all_notes, max_id, last_category = load_notes()
 
-    for note in notes:
-        if note["id"] == note_id:
-            note["checked"] = checked
-            note["marked_timestamp"] = datetime.now().isoformat()
-            save_notes(notes, max_id, last_category)
-            print(f"Note {'marked' if checked else 'unmarked'} successfully.")
-            return
-
-        for index, sub in enumerate(note["subs"]):
-            if sub["id"] == note_id:
-                sub["checked"] = checked
+    def find_and_mark_note(notes):
+        for note in notes:
+            if note["id"] == note_id:
+                note["checked"] = checked
                 note["marked_timestamp"] = datetime.now().isoformat()
-                save_notes(notes, max_id, last_category)
                 print(f"Note {'marked' if checked else 'unmarked'} successfully.")
-                return
+                return True
+            elif find_and_mark_note(note["subs"]):
+                return True
+        else:
+            return False
+
+    note_marked = find_and_mark_note(all_notes)
+
+    if note_marked:
+        save_notes(all_notes, max_id, last_category)
     else:
-        print("Invalid note ID.")
+        print("Invalid note id.")
 
 
 def delete_note(note_id):
