@@ -47,9 +47,12 @@ VAN-STUFF-----------------------------------------------------------------------
 [✔] 55 Fix the latch for the fridge
 [ ] 58 Install Solar
     [ ] 60 Install roof-rack, hopefully easy
+        * How hard could it be
+        * Hahaha
     [ ] 61 Attach panels
     [ ] 62 Run wiring
 ```
+As you can see, using * in a message (no newline necessary) will cause that to be indented on the next line down.
 
 List notes with filters (category or importance or marked) or higher verbosity:
 
@@ -57,19 +60,19 @@ List notes with filters (category or importance or marked) or higher verbosity:
 ti list -c <category> -i <importance> -m -u -v
 ```
 
-Add a sub-note to a note (currently only supports one level)
+Add a sub-note to a note (can be as recursive as you can dream)
 
 ```bash
 ti sub <parent_id> "Text of your sub-note" -i <importance>
 ```
 
-Mark a note as checked/unchecked:
+Mark a note as checked/unchecked (-u indicates to unmark):
 
 ```bash
-ti mark <note_id>
+ti mark <note_id> -u 
 ```
 
-Delete a note:
+Delete a note (deletes all children notes):
 
 ```bash
 ti delete <note_id>
