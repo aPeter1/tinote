@@ -1,0 +1,3 @@
+[submodule "ticore"]
+	path = ticore
+	url = https://github.com/aPeter1/ticore.git
